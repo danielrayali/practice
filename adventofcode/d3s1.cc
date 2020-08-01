@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     point_map[0].insert(0);
     Point position;
     while (getline(linestream, move, ',')) {
-        cout << "Processing " << move << endl;
+    //    cout << "Processing " << move << endl;
         position = AddPoints(position, move, point_map);
     }
 
@@ -102,8 +102,9 @@ int main(int argc, char* argv[]) {
     stringstream linestream2(line);
     position.x = 0;
     position.y = 0;
+    int lowest_distance = std::numeric_limits<int>::max();
     while (getline(linestream2, move, ',')) {
-        cout << "Processing " << move << endl;
+    //    cout << "Processing " << move << endl;
         vector<Point> points = GetPoints(position, move);
         for (auto point : points) {
             auto xit = point_map.find(point.x);
@@ -111,10 +112,17 @@ int main(int argc, char* argv[]) {
                 auto yit = xit->second.find(point.y);
                 if (yit != xit->second.end()) {
                     cout << "Intersection found: " << point.x << "," << point.y << endl;
+                    int distance = abs(point.x) + abs(point.y);
+                    cout << "Distance from center: " << distance << endl;
+                    if (distance < lowest_distance) {
+                        lowest_distance = distance;
+                    }
                 }
             }
         }
     }
+
+    cout << "Lowest distance: " << lowest_distance << endl;
 
     return 0;
 }
