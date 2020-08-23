@@ -145,17 +145,11 @@ int main(int argc, char* argv[]) {
     vector<int> max_phases = {0,0,0,0,0};
     int max = -1;
     for (auto permute : permutes) {
-        // cout << "Trying: " << permute[0] << " "
-        //      << permute[1] << " "
-        //      << permute[2] << " "
-        //      << permute[3] << " "
-        //      << permute[4] << endl;
         // Prime the phase inputs
         int result = 0;
         vector<int> positions = {0,0,0,0,0};
         bool amp_done[5] = {false, false, false, false, false};
         for (int i = 0; i < 5; i++) {
-            // cout << "Loop" << endl;
             amp_codes[i] = codes;
             result = Process(amp_codes[i], {permute[i], result}, amp_done[i], positions[i]);
         }
