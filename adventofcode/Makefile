@@ -1,4 +1,4 @@
-all: d1s1 d1s2 d2s1 d2s2 d3s1 d3s2 d4s1 d4s2 d5s1 d5s2 d6s1 d6s2 d7s1 d7s2 d8s1 d8s2
+all: d1s1 d1s2 d2s1 d2s2 d3s1 d3s2 d4s1 d4s2 d5s1 d5s2 d6s1 d6s2 d7s1 d7s2 d8s1 d8s2 d9s1
 
 d1s1:
 	g++ -o d1s1 -std=c++11 d1s1.cc
@@ -48,5 +48,8 @@ d8s1: d8s1.cc
 d8s2: d8s2.cc
 	g++ -o d8s2 -std=c++11 d8s2.cc
 
+d9s1: d9s1.cc
+	g++ -o d9s1 -std=c++11 d9s1.cc
+
 clean:
-	rm -rf *.o d1s1 d1s1 d2s1 d2s2 d3s1 d3s2 d4s1 d4s2 d5s1 d5s2 d6s1 d6s2 d7s1 d7s2 d8s1 d8s2
+	rm -rf *.o d1s1 d1s1 d2s1 d2s2 d3s1 d3s2 d4s1 d4s2 d5s1 d5s2 d6s1 d6s2 d7s1 d7s2 d8s1 d8s2 d9s1
