@@ -68,6 +68,10 @@ struct Point {
     int y;
 
     Point(int a, int b) : x(a), y(b) {}
+
+    double Magnitude() {
+        return sqrt(x*x + y*y);
+    }
 };
 
 Point operator-(const Point from, const Point to) {
@@ -97,6 +101,26 @@ double CalculateAngle(const Point point) {
     }
 }
 
+ostream& operator<<(ostream& out, const Point point) {
+    out << "(" << point.x << "," << point.y << ")";
+    return out;
+}
+
+void EraseLowest(vector<Point>& points) {
+    auto lowest = points.begin();
+    for (auto iter = points.begin(); iter != points.end(); iter++) {
+        if (lowest->Magnitude() > iter->Magnitude()) {
+            lowest = iter;
+        }
+    }
+    cout << "Removing " << *lowest << endl;
+    points.erase(lowest);
+}
+
+void PrintAsteroids(map<double, vector<Point>> asteroids) {
+    for (auto)
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         cerr << "Usage: " << argv[0] << " <input_file>" << endl;
@@ -107,7 +131,7 @@ int main(int argc, char* argv[]) {
     ifstream input(path);
 
     // Maps a GCD reduced slope to a set of points
-    map<string, vector<Point>> asteroids;
+    map<double, vector<Point>> asteroids;
     char temp;
     int x_pos = 1, y_pos = 1;
     while (input.get(temp)) {
@@ -115,20 +139,39 @@ int main(int argc, char* argv[]) {
             x_pos = 1;
             y_pos++;
         } else if (temp == '#') {
-            Point relative = kCenter - Point(x_pos, y_pos);
+            Point absolute(x_pos, y_pos);
+            Point relative = kCenter - absolute;
             double angle = CalculateAngle(relative);
             stringstream angle_str;
             angle_str << setprecision(7) << angle;
+            cout << "Absolute: " << absolute << endl;
+            cout << "Relative: " << relative << endl;
             cout << "Angle: " << angle_str.str() << endl;
-            asteroids[angle_str.str()].emplace_back(relative);
+            asteroids[atof(angle_str.str().c_str())].emplace_back(relative);
             x_pos++;
         }
     }
 
-    // // Sort points by their distance from the center
-    // for (auto &line : asteroids) {
-    //     SortLine(line.second);
-    // }
+    // Collect keys
+    vector<double> keys;
+    for (auto iter : asteroids) {
+        keys.push_back(iter.first);
+    }
+
+    bool all_empty = false;
+    while (!all_empty) {
+        all_empty = true;
+        for (size_t i = 0; i < keys.size(); ++i) {
+            auto iter = asteroids.find(keys[i]);
+            if (iter->second.empty()) {
+                continue;
+            }
+            all_empty = false;
+            EraseLowest(iter->second);
+        }
+    }
+
+    cout << "Done" << endl;
 
     // // Print for verification
     // for (auto line : asteroids) {
