@@ -4,64 +4,10 @@
 #include <fstream>
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
+#include <cmath>
 
 using namespace std;
-
-// struct Point {
-//     int x = 0;
-//     int y = 0;
-
-//     Point(int a, int b) : x(a), y(b) {}
-
-//     Point(const Point& other) : x(other.x), y(other.y) {}
-// };
-
-// bool operator==(const Point& a, const Point& b) {
-//     return (a.x == b.x) && (a.y == b.y);
-// }
-
-// double CalculateDistance(const Point a, const Point b) {
-//     int x_a = a.x - b.x;
-//     int y_a = a.y - b.y;
-//     return sqrt(double(x_a * x_a) + double(y_a * y_a));
-// }
-
-// bool operator<(const Point& a, const Point& b) {
-//     const double distance_a = CalculateDistance(a, kCenter);
-//     const double distance_b = CalculateDistance(b, kCenter);
-//     return distance_a < distance_b;
-// }
-
-// struct Slope {
-//     int x = 0;
-//     int y = 0;
-
-//     Slope(const Point from, const Point to) {
-//         this->x = to.x - from.x;
-//         this->y = to.y - from.y;
-//     }
-
-//     Slope(int a, int b) : x(a), y(b) {}
-
-//     Slope(const Slope& other) : x(other.x), y(other.y) {}
-// };
-
-// bool operator<(const Slope& a, const Slope& b) {
-//     double slope_a(double(a.x) / double(a.y));
-//     double slope_b(double(b.x) / double(b.y));
-//     return slope_a < slope_b;
-// }
-
-// int CalculateGCD(const int a, const int b) {
-//     if (b == 0) {
-//         return a;
-//     }
-//     return CalculateGCD(b, a % b);
-// }
-
-// void SortLine(vector<Point>& line) {
-//     sort(line.begin(), line.end());
-// }
 
 struct Point {
     int x;
@@ -74,8 +20,12 @@ struct Point {
     }
 };
 
-Point operator-(const Point from, const Point to) {
+Point operator-(const Point to, const Point from) {
     return Point(to.x - from.x, to.y - from.y);
+}
+
+Point operator+(const Point a, const Point b) {
+    return Point(a.x + b.x, a.y + b.y);
 }
 
 static const Point kCenter(12,14);
@@ -113,12 +63,31 @@ void EraseLowest(vector<Point>& points) {
             lowest = iter;
         }
     }
-    cout << "Removing " << *lowest << endl;
+    cout << *lowest << endl;
     points.erase(lowest);
 }
 
 void PrintAsteroids(map<double, vector<Point>> asteroids) {
-    for (auto)
+    vector<vector<char>> asteroids_map(20, {20, '.'});
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            asteroids_map[i][j] = '.';
+        }
+    }
+
+    for (auto iter : asteroids) {
+        for (auto point_iter : iter.second) {
+            Point point = kCenter + point_iter;
+            asteroids_map[point.y-1][point.x-1] = '#';
+        }
+    }
+
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            cout << asteroids_map[i][j];
+        }
+        cout << endl;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -138,18 +107,16 @@ int main(int argc, char* argv[]) {
         if (temp == '\n') {
             x_pos = 1;
             y_pos++;
+            continue;
         } else if (temp == '#') {
             Point absolute(x_pos, y_pos);
-            Point relative = kCenter - absolute;
+            Point relative = absolute - kCenter;
             double angle = CalculateAngle(relative);
             stringstream angle_str;
             angle_str << setprecision(7) << angle;
-            cout << "Absolute: " << absolute << endl;
-            cout << "Relative: " << relative << endl;
-            cout << "Angle: " << angle_str.str() << endl;
             asteroids[atof(angle_str.str().c_str())].emplace_back(relative);
-            x_pos++;
         }
+        x_pos++;
     }
 
     // Collect keys
@@ -159,7 +126,10 @@ int main(int argc, char* argv[]) {
     }
 
     bool all_empty = false;
+    int count = 0;
     while (!all_empty) {
+        PrintAsteroids(asteroids);
+        cout << "--" << endl;
         all_empty = true;
         for (size_t i = 0; i < keys.size(); ++i) {
             auto iter = asteroids.find(keys[i]);
@@ -168,6 +138,10 @@ int main(int argc, char* argv[]) {
             }
             all_empty = false;
             EraseLowest(iter->second);
+            count++;
+            if (count == 200) {
+                cout << "200th found" << endl;
+            }
         }
     }
 
