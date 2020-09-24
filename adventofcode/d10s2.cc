@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 #include <map>
 #include <vector>
 #include <fstream>
@@ -28,6 +29,10 @@ Point operator+(const Point a, const Point b) {
     return Point(a.x + b.x, a.y + b.y);
 }
 
+bool operator==(const Point a, const Point b) {
+    return (a.x == b.x && a.y == b.y);
+}
+
 static const Point kCenter(12,14);
 
 double CalculateAngle(const Point point) {
@@ -36,16 +41,16 @@ double CalculateAngle(const Point point) {
     const double length = x_squared + y_squared;
     if (point.x >= 0.0 && point.y > 0.0) {
         // In upper right quadrant
-        return (180.0 / M_PI) * atan(double(point.x) / double(point.y));
+        return (180.0 / M_PI) * (M_PI + atan(double(point.x) / double(point.y)));
     } else if ((point.x > 0.0) && (point.y <= 0.0)) {
         // In lower right quadrant
-        return (180.0 / M_PI) * (M_PI / 2.0 - atan(double(point.y) / double(point.x)));
+        return (180.0 / M_PI) * (M_PI*3.0 / 2.0 - atan(double(point.y) / double(point.x)));
     } else if ((point.x <= 0.0) && (point.y < 0.0)) {
         // In lower left quadrant
-        return (180.0 / M_PI) * (M_PI + atan(double(point.x) / double(point.y)));
+        return (180.0 / M_PI) * atan(double(point.x) / double(point.y));
     } else if ((point.x < 0) && (point.y >= 0)) {
         // In upper left quadrant
-        return (180.0 / M_PI) * (3.0*M_PI/2.0 - atan(double(point.y) / double(point.x)));
+        return (180.0 / M_PI) * (M_PI /2.0 - atan(double(point.y) / double(point.x)));
     } else {
         return 0.0;
     }
@@ -56,15 +61,17 @@ ostream& operator<<(ostream& out, const Point point) {
     return out;
 }
 
-void EraseLowest(vector<Point>& points) {
+// Returns the erased point
+Point EraseLowest(vector<Point>& points) {
     auto lowest = points.begin();
     for (auto iter = points.begin(); iter != points.end(); iter++) {
-        if (lowest->Magnitude() > iter->Magnitude()) {
+        if (abs(lowest->Magnitude()) > abs(iter->Magnitude())) {
             lowest = iter;
         }
     }
-    cout << *lowest << endl;
+    Point erased = *lowest;
     points.erase(lowest);
+    return erased;
 }
 
 void PrintAsteroids(map<double, vector<Point>> asteroids) {
@@ -110,8 +117,14 @@ int main(int argc, char* argv[]) {
             continue;
         } else if (temp == '#') {
             Point absolute(x_pos, y_pos);
+            if (absolute == kCenter) {
+                continue;
+            }
             Point relative = absolute - kCenter;
             double angle = CalculateAngle(relative);
+            if (angle == -0.0) { angle = 0.0; }
+            cout << relative << endl;
+            cout << angle << endl;
             stringstream angle_str;
             angle_str << setprecision(7) << angle;
             asteroids[atof(angle_str.str().c_str())].emplace_back(relative);
@@ -122,11 +135,16 @@ int main(int argc, char* argv[]) {
     // Collect keys
     vector<double> keys;
     for (auto iter : asteroids) {
+        cout << "Pushing back " << iter.first << endl;
+        for (auto i : iter.second) {
+            cout << i<< endl;
+        }
         keys.push_back(iter.first);
     }
 
     bool all_empty = false;
     int count = 0;
+    set<int> legend = {1,2,3,10,20,50,100,199,200,201,299};
     while (!all_empty) {
         PrintAsteroids(asteroids);
         cout << "--" << endl;
@@ -137,24 +155,16 @@ int main(int argc, char* argv[]) {
                 continue;
             }
             all_empty = false;
-            EraseLowest(iter->second);
+            Point erased = EraseLowest(iter->second);
+            cout << "Erasing " << erased << endl;
             count++;
-            if (count == 200) {
-                cout << "200th found" << endl;
+            if (legend.find(count) != legend.end()) {
+                cout << count << ": " << erased + kCenter - Point(1,1) << endl;
             }
         }
     }
 
     cout << "Done" << endl;
-
-    // // Print for verification
-    // for (auto line : asteroids) {
-    //     cout << double(line.first.x) / double(line.first.y) << ": ";
-    //     for (auto point : line.second) {
-    //        cout << point.x << "/" << point.y << " (" << CalculateDistance(point, kCenter) << "), ";
-    //     }
-    //     cout << endl;
-    // }
 
     return 0;
 }
