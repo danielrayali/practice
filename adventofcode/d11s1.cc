@@ -138,12 +138,8 @@ class DirectionalMap {
     ~DirectionalMap() = default;
 
     bool HasCurrentBeenVisited() const {
-        for (auto iter : visited_) {
-            if ((x_ == iter.first) && (y_ == iter.second)) {
-                return true;
-            }
-        }
-        return false;
+        auto iter = visited_.find(make_pair(x_, y_));
+        return (iter != visited_.end());  // If not in the list, it has not been visited
     }
 
     void VisitCurrent() {
@@ -237,11 +233,11 @@ int main(int argc, char* argv[]) {
 
         computer.Process(in, out);
         if (computer.IsDone()) {
-            break;
+            throw runtime_error("Unexpected termination of program (0)");
         }
 
         if (out.size() != 1) {
-            throw runtime_error("Out is an unexpected size: " + to_string(out.size()));
+            throw runtime_error("Unexpected output size: " + to_string(out.size()));
         }
 
         if (out[0] == 0) {
@@ -254,9 +250,12 @@ int main(int argc, char* argv[]) {
 
         out.clear();
         computer.Process(in, out);
+        if (computer.IsDone()) {
+            throw runtime_error("Unexpected termination of program (1)");
+        }
 
         if (out.size() != 1) {
-            throw runtime_error("Out is an unexpected size: " + to_string(out.size()));
+            throw runtime_error("Unexpected output size: " + to_string(out.size()));
         }
 
         if (out[0] == 0) {
