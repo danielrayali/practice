@@ -138,14 +138,11 @@ class DirectionalMap {
     ~DirectionalMap() = default;
 
     bool HasCurrentBeenVisited() const {
-        auto iter = visited_.find(make_pair(x_, y_));
-        return (iter != visited_.end());  // If not in the list, it has not been visited
+        return (visited_.find(make_pair(x_, y_)) != visited_.end());
     }
 
     void VisitCurrent() {
-        if (visited_.find(make_pair(x_, y_)) == visited_.end()) {
-            visited_.emplace(x_, y_);
-        }
+        visited_.emplace(x_, y_);
     }
 
     void ClearVisit() {
@@ -164,12 +161,15 @@ class DirectionalMap {
         case EAST:
             dir_ = NORTH;
             y_++;
+            break;
         case SOUTH:
             dir_ = EAST;
             x_++;
+            break;
         case WEST:
             dir_ = SOUTH;
             y_--;
+            break;
         }
     }
 
@@ -182,12 +182,15 @@ class DirectionalMap {
         case EAST:
             dir_ = SOUTH;
             y_--;
+            break;
         case SOUTH:
             dir_ = WEST;
             x_--;
+            break;
         case WEST:
             dir_ = NORTH;
             y_++;
+            break;
         }
     }
 
@@ -226,14 +229,19 @@ int main(int argc, char* argv[]) {
     DirectionalMap dir_map;
     IntCodeComputer computer(codes);
     vector<long long> in;
-    in.push_back(0);
     vector<long long> out;
     while (!computer.IsDone()) {
-        in[0] = (dir_map.HasCurrentBeenVisited() ? 1 : 0);
+        if (dir_map.HasCurrentBeenVisited()) {
+            cout << "Visit" << endl;
+            in.emplace_back(1);
+        } else {
+            in.emplace_back(0);
+        }
 
         computer.Process(in, out);
         if (computer.IsDone()) {
-            throw runtime_error("Unexpected termination of program (0)");
+            break;
+            // throw runtime_error("Unexpected termination of program (0)");
         }
 
         if (out.size() != 1) {
@@ -266,10 +274,12 @@ int main(int argc, char* argv[]) {
             throw runtime_error("Unexpected output value: " + to_string(out[0]));
         }
 
+        in.clear();
         out.clear();
     }
 
     // 3437 is too high
+    // 1071 is too low
     cout << "Number of visited locations: " << dir_map.GetNumVisited() << endl;
     return 0;
 }
