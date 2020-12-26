@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <set>
+#include <utility>
 
 using namespace std;
 
@@ -130,47 +131,85 @@ class IntCodeComputer {
     }
 };
 
-char GetNewDir(char dir, int turn) {
-    if (turn == 0) {
-        switch (dir) {
-        case '^': return '<';
-        case '<': return 'v';
-        case '>': return '^';
-        case 'v': return '>';
-        default: throw runtime_error("Direction is not right");
-        }
-    } else if (turn == 1) {
-        switch (dir) {
-        case '^': return '>';
-        case '<': return '^';
-        case '>': return 'v';
-        case 'v': return '<';
-        default: throw runtime_error("Direction is not right");
-        }
-    }
-    throw runtime_error("GetNewDir() error");
-}
+class DirectionalMap {
+ public:
+    DirectionalMap() : x_(0), y_(0), dir_(NORTH) {}
 
-pair<int,int> GetNewPos(char dir, pair<int,int> pos, int turn) {
-    if (turn == 0) {
-        switch (dir) {
-        case '^': return pair<int,int>{pos.first-1, pos.second  };
-        case '<': return pair<int,int>{pos.first  , pos.second-1};
-        case '>': return pair<int,int>{pos.first  , pos.second+1};
-        case 'v': return pair<int,int>{pos.first+1, pos.second  };
-        default: throw runtime_error("Direction is not right");
-        }
-    } else if (turn == 1) {
-        switch (dir) {
-        case '^': return pair<int,int>{pos.first+1, pos.second  };
-        case '<': return pair<int,int>{pos.first  , pos.second+1};
-        case '>': return pair<int,int>{pos.first  , pos.second-1};
-        case 'v': return pair<int,int>{pos.first-1, pos.second  };
-        default: throw runtime_error("Direction is not right");
+    ~DirectionalMap() = default;
+
+    bool HasCurrentBeenVisited() const {
+        return (visited_.find(make_pair(x_, y_)) != visited_.end());
+    }
+
+    void VisitCurrent() {
+        visited_.emplace(x_, y_);
+    }
+
+    void ClearVisit() {
+        auto iter = visited_.find(make_pair(x_, y_));
+        if (iter != visited_.end()) {
+            visited_.erase(iter);
         }
     }
-    throw runtime_error("GetNewPos() error");
-}
+
+    void MoveLeft() {
+        switch (dir_) {
+        case NORTH:
+            dir_ = WEST;
+            x_--;
+            break;
+        case EAST:
+            dir_ = NORTH;
+            y_++;
+            break;
+        case SOUTH:
+            dir_ = EAST;
+            x_++;
+            break;
+        case WEST:
+            dir_ = SOUTH;
+            y_--;
+            break;
+        }
+    }
+
+    void MoveRight() {
+        switch (dir_) {
+        case NORTH:
+            dir_ = EAST;
+            x_++;
+            break;
+        case EAST:
+            dir_ = SOUTH;
+            y_--;
+            break;
+        case SOUTH:
+            dir_ = WEST;
+            x_--;
+            break;
+        case WEST:
+            dir_ = NORTH;
+            y_++;
+            break;
+        }
+    }
+
+    size_t GetNumVisited() const {
+        return visited_.size();
+    }
+
+ private:
+    std::set<std::pair<long long, long long>> visited_;
+    long long x_;
+    long long y_;
+    enum Dir {
+        NORTH,
+        SOUTH,
+        EAST,
+        WEST
+    };
+    Dir dir_;
+};
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -187,43 +226,60 @@ int main(int argc, char* argv[]) {
         codes.push_back(atoll(current.c_str()));
     }
 
+    DirectionalMap dir_map;
     IntCodeComputer computer(codes);
-    vector<long long> in{0};
-    pair<int,int> pos{0,0};
-    set<pair<int,int>> whites;
-    char dir = '^';
+    vector<long long> in;
+    vector<long long> out;
     while (!computer.IsDone()) {
-        vector<long long> out;
+        if (dir_map.HasCurrentBeenVisited()) {
+            cout << "Visit" << endl;
+            in.emplace_back(1);
+        } else {
+            in.emplace_back(0);
+        }
+
         computer.Process(in, out);
-        if (out.size() > 1) {
-            throw runtime_error("Out is too large");
+        if (computer.IsDone()) {
+            break;
+            // throw runtime_error("Unexpected termination of program (0)");
         }
 
-        if (out[0] == 1) {
-            whites.insert(pos);
-        } else if (out[0] == 0) {
-            auto iter = whites.find(pos);
-            if (iter != whites.end()) {
-                whites.erase(iter);
-            }
+        if (out.size() != 1) {
+            throw runtime_error("Unexpected output size: " + to_string(out.size()));
         }
 
-        in[0] = out[0];
+        if (out[0] == 0) {
+            dir_map.ClearVisit();
+        } else if (out[0] == 1) {
+            dir_map.VisitCurrent();
+        } else {
+            throw runtime_error("Unexpected output value: " + to_string(out[0]));
+        }
+
         out.clear();
         computer.Process(in, out);
-
-        if (out.size() > 1) {
-            throw runtime_error("Out is too large");
+        if (computer.IsDone()) {
+            throw runtime_error("Unexpected termination of program (1)");
         }
 
-        dir = GetNewDir(dir, out[0]);
-        pos = GetNewPos(dir, pos, out[0]);
+        if (out.size() != 1) {
+            throw runtime_error("Unexpected output size: " + to_string(out.size()));
+        }
+
+        if (out[0] == 0) {
+            dir_map.MoveLeft();
+        } else if (out[0] == 1) {
+            dir_map.MoveRight();
+        } else {
+            throw runtime_error("Unexpected output value: " + to_string(out[0]));
+        }
+
+        in.clear();
+        out.clear();
     }
 
-    // cout << "Output size: " << out.size() << endl;
-    // for (int i = 0; i < out.size(); ++i) {
-    //     cout << "Output[" << i << "]: " << out[0] << endl;
-    // }
-
+    // 3437 is too high
+    // 1071 is too low
+    cout << "Number of visited locations: " << dir_map.GetNumVisited() << endl;
     return 0;
 }
