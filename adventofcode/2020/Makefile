@@ -8,7 +8,7 @@ CXX = clang++
 CFLAGS = -g -Wall -std=c++11
 
 # the build target executables
-TARGET = d1s1 d1s2 d2s1 d2s2 d3s1 d4s1
+TARGET = d1s1 d1s2 d2s1 d2s2 d3s1 d4s1 d4s2
 
 # the all rule that "make" defaults to
 all: $(TARGET)
