@@ -35,7 +35,7 @@ bool IsEntryValid(PasswordEntry& password_entry) {
     bool lo_contains = (password_entry.password.at(password_entry.lo_count - 1) == password_entry.letter);
     bool hi_contains = (password_entry.password.at(password_entry.hi_count - 1) == password_entry.letter);
     cout << "Validation: " << lo_contains << " " << hi_contains << " " << (lo_contains ^ hi_contains) << endl;
-    return lo_contains ^ hi_contains;
+    return (lo_contains ^ hi_contains);
 }
 
 int main(int argc, char* argv[]) {

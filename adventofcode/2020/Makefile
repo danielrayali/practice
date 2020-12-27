@@ -7,14 +7,16 @@ CXX = clang++
 #  -std=c++11 	Allow C++11 code
 CFLAGS = -g -Wall -std=c++11
 
-# the build target executable:
-TARGET = d1s1 d1s2 d2s1 d2s2
+# the build target executables
+TARGET = d1s1 d1s2 d2s1 d2s2 d3s1 d4s1
 
+# the all rule that "make" defaults to
 all: $(TARGET)
 
 # Rule for building binaries with .cc inputs
 $(TARGET): %: %.cc
 	$(CXX) $(CFLAGS) -o $@ $<
 
+# the "make clean" rule
 clean:
 	$(RM) -rf $(TARGET) *.dSYM
