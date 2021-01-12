@@ -4,21 +4,6 @@
 
 using namespace std;
 
-bool ContainsSumsValues(const deque<long long>& values, long long sum) {
-    for (int i = 0; i < values.size(); ++i) {
-        for (int j = 0; j < values.size(); ++j) {
-            if (i == j) {
-                continue;
-            }
-            const long long test = (values[i] + values[j]);
-            if (test == sum) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 int main(int argc, char* argv[]) {
     ifstream input("d9s1.txt");
     vector<long long> values;
