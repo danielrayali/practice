@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
         cout << "Seat ID: " << seat_id << endl;
         seat_ids.push_back(seat_id);
     }
-    
+
     sort(seat_ids.begin(), seat_ids.end());
     for (int i = 1; i < seat_ids.size(); ++i) {
         if ((seat_ids[i] - seat_ids[i - 1]) == 2) {
