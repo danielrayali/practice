@@ -53,59 +53,42 @@ void Print(vector<string>& seats) {
     }
 }
 
+int CountOccupiedSeats(const vector<string>& seats) {
+    int count = 0;
+    for (auto outter : seats) {
+        for (auto inner : outter) {
+            if (inner == '#') {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
 int main(int argc, char* argv[]) {
     ifstream input("d11s1.txt");
-    vector<string> seats1;
+    vector<string> seats[2];
     while (!input.eof()) {
         string line;
         getline(input, line);
-        seats1.emplace_back(line);
-        cout << "Read: " << seats1.back() << endl;
+        seats[0].emplace_back(line);
+        cout << "Read: " << seats[0].back() << endl;
     }
 
     cout << "Initial seat map: " << endl;
-    Print(seats1);
+    Print(seats[0]);
 
-    vector<string> seats2 = Iterate(seats1);
-    cout << "After round 1: " << endl;
-    Print(seats2);
-    if (seats1 == seats2) {
-        cout << "Seat maps are equal too early" << endl;
-        return 0;
+    int round = 0;
+    int index_left = 0, index_right = 1;
+    while (seats[index_left] != seats[index_right]) {
+        seats[index_right] = Iterate(seats[index_left]);
+        swap(index_left, index_right);
+        round++;
+        cout << "After round " << round << ": " << endl;
+        Print(seats[index_right]);
     }
 
-    seats1 = Iterate(seats2);
-    cout << "After round 2: " << endl;
-    Print(seats1);
-    if (seats1 == seats2) {
-        cout << "Seat maps are equal too early" << endl;
-        return 0;
-    }
-
-
-    seats2 = Iterate(seats1);
-    cout << "After round 3: " << endl;
-    Print(seats2);
-    if (seats1 == seats2) {
-        cout << "Seat maps are equal too early" << endl;
-        return 0;
-    }
-
-    seats1 = Iterate(seats2);
-    cout << "After round 4: " << endl;
-    Print(seats1);
-    if (seats1 == seats2) {
-        cout << "Seat maps are equal too early" << endl;
-        return 0;
-    }
-
-    seats2 = Iterate(seats1);
-    cout << "After round 5: " << endl;
-    Print(seats2);
-    if (seats1 == seats2) {
-        cout << "Seat maps are equal after 5 rounds" << endl;
-        return 0;
-    }
-
+    cout << "Seats have converged after round: " << round << endl;
+    cout << "Number of occupied seats: " << CountOccupiedSeats(seats[index_right]) << endl;
     return 0;
 }
