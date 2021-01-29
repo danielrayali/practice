@@ -6,7 +6,6 @@
 using namespace std;
 
 bool ContainsOccupiedVisibleSeat(vector<string>& seats, int x, int y, int slope_x, int slope_y) {
-    int x_start = x, y_start = y;
     if ((slope_x == 0) && (slope_y == 0)) {
         return false;
     }
