@@ -21,55 +21,29 @@ int main(int argc, char* argv[]) {
         }
         long long bus_id = atoll(bus_id_str.c_str());
         bus_ids.push_back(bus_id);
-        cout << "Read: " << bus_id << endl;
-    }
-
-    // First find the largest jump we'll be able to do
-    long long largest = -1;
-    size_t largest_index = 0;
-    for (size_t i = 0; i < bus_ids.size(); ++i) {
-        if (bus_ids[i] > largest) {
-            largest = bus_ids[i];
-            largest_index = i;
+        if (bus_id_str != "1") {
+            cout << "Read: x = " << (bus_ids.size() - 1) << " mod " << bus_id << endl;
         }
     }
-    cout << "Largest bus ID: " << largest << endl;
-    cout << "Largest bus ID index: " << largest_index << endl;
 
-    // Find the first timestamp divisibe by the largest bus ID
-    long long timestamp = earliest_start;
-    while (timestamp != numeric_limits<long long>::max()) {
-        if (timestamp % 571 == 0) {
-            break;
-        }
-        timestamp++;
+    long long product = 1;
+    for (auto bus_id : bus_ids) {
+        product *= bus_id;
     }
-    cout << "Largest timestamp found: " << timestamp << endl;
 
-    // Subtract its position to get the timestamp that needs to match in index 0
-    timestamp -= largest_index;
+    vector<long long> y;
+    for (auto bus_id : bus_ids) {
+        y.push_back(product / bus_id);
+    }
 
-    // Iterate over all data that will match the largest
-    int count = 0;
-    while (true) {
-        bool found = true;
-        for (long long i = 0; i < bus_ids.size(); ++i) {
-            if (((timestamp + i) % bus_ids[i]) != 0) {
-                if (count > 100000000) {
-                    cout << "Timestamp " << (timestamp + i) << " for index " << i;
-                    cout << " doesn't work for bus ID " << bus_ids[i] << endl;
-                    count = 0;
-                }
-                count++;
-                found = false;
-                break;
-            }
-        }
-        if (found) {
-            break;
-        }
+    vector<long long> z;
+    for (int i = 0; i < y.size(); ++i) {
+        z.push_back((1/y[i]) % bus_ids[i]);
+    }
 
-        timestamp += largest;
+    int timestamp = 0;
+    for (int i = 0; i < y.size(); ++i) {
+        timestamp += i * y[i] * z[i];
     }
 
     cout << "Timestamp: " << timestamp << endl;
