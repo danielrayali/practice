@@ -15,8 +15,9 @@ struct Congruence {
     Congruence(const long long _modulus, const long long _remainder) :
         modulus(_modulus), remainder(_remainder) {}
 
-    Congruence(const Polynomial& polynomial) :
-        modulus(polynomial.coefficient), remainder(polynomial.constant) {}
+    // Can't use this constructor without defining Polynomial better (header/cpp file?)
+    // Congruence(const Polynomial& polynomial) :
+    //     modulus(polynomial.coefficient), remainder(polynomial.constant) {}
 };
 
 // Represents a polynomial of the form y = ax + b. Where "a" is the coefficient and "b" is the constant.
@@ -57,7 +58,8 @@ long long ModuloDivide(const long long dividend, const long long divisor, const 
 Polynomial CRTIteration(const Polynomial& polynomial, const Congruence& congruence) {
     long long value = ModuloSubtract(congruence.remainder, polynomial.constant, congruence.modulus);
     value = ModuloDivide(value, polynomial.coefficient, congruence.modulus);
-    return Polynomial(congruence.modulus, value);
+    Polynomial next(congruence.modulus, value);
+    return Polynomial(polynomial.coefficient * next.coefficient, (polynomial.coefficient * next.constant) + polynomial.constant);
 }
 
 ostream& operator<<(ostream& out, const Congruence& congruence) {
@@ -85,6 +87,7 @@ int main(int argc, char* argv[]) {
         cout << "Read: " << bus_id_str << endl;
         if (bus_id_str == "x") {
             // bus_id_str = "1";
+            count++;
             continue;
         }
 
@@ -102,14 +105,18 @@ int main(int argc, char* argv[]) {
         cout << "  " << congruence << endl;
     }
 
+    // Iterate once to get the first polynomial to solve
     Polynomial polynomial(system.front());
+    cout << "Starting polynomial: " << polynomial << endl;
     for (int i = 1; i < system.size(); i++) {
-        cout << "iteration " << i << endl;
         polynomial = CRTIteration(polynomial, system[i]);
+        cout << "Iteration " << i << ": " << polynomial << endl;
     }
-
     cout << "Resulting polynomial: " << polynomial << endl;
-    cout << "4 - 6 (mod 5) = " << ModuloSubtract(4, 6, 5) << endl;
-    cout << "3 / 7 (mod 5) = " << ModuloDivide(3, 7, 5) << endl;
+
+    Congruence result(polynomial.coefficient, polynomial.constant);
+    cout << "Resulting congruence: " << result << endl;
+    cout << "Resulting value: " << result.remainder + result.modulus << endl;
+
     return 0;
 }
