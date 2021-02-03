@@ -7,7 +7,7 @@
 using namespace std;
 
 // Represents a congruence of the form x ≡ a (mod b) where "a" is the remainder and "b" is the modulus.
-// x is unspecified.
+// x is an unspecified variable.
 struct Congruence {
     long long modulus = -1;
     long long remainder = -1;
@@ -33,6 +33,17 @@ struct Polynomial {
         coefficient(congruence.modulus), constant(congruence.remainder) {}
 };
 
+ostream& operator<<(ostream& out, const Congruence& congruence) {
+    out << "y ≡ " << congruence.remainder << " (mod " << congruence.modulus << ")";
+    return out;
+}
+
+ostream& operator<<(ostream& out, const Polynomial& polynomial) {
+    out << "y = " << polynomial.coefficient << "x + " << polynomial.constant;
+    return out;
+}
+
+
 // Shamelessly stolen from this well answered stack overflow question:
 // https://stackoverflow.com/questions/14029516/need-an-efficient-subtraction-algorithm-modulo-a-number
 long long ModuloSubtract(const long long minuend, const long long subtrahend, const long long modulus) {
@@ -43,6 +54,7 @@ long long ModuloDivide(const long long dividend, const long long divisor, const 
     if (divisor == 0) {
         throw runtime_error("Cannot divide by zero");
     }
+
     // Get the multiplicative inverse of the divisor
     long long inverse = 1;
     long long product = divisor;
@@ -60,16 +72,6 @@ Polynomial CRTIteration(const Polynomial& polynomial, const Congruence& congruen
     value = ModuloDivide(value, polynomial.coefficient, congruence.modulus);
     Polynomial next(congruence.modulus, value);
     return Polynomial(polynomial.coefficient * next.coefficient, (polynomial.coefficient * next.constant) + polynomial.constant);
-}
-
-ostream& operator<<(ostream& out, const Congruence& congruence) {
-    out << "x ≡ " << congruence.remainder << " (mod " << congruence.modulus << ")";
-    return out;
-}
-
-ostream& operator<<(ostream& out, const Polynomial& polynomial) {
-    out << "y = " << polynomial.coefficient << "x + " << polynomial.constant;
-    return out;
 }
 
 int main(int argc, char* argv[]) {
@@ -116,7 +118,6 @@ int main(int argc, char* argv[]) {
 
     Congruence result(polynomial.coefficient, polynomial.constant);
     cout << "Resulting congruence: " << result << endl;
-    cout << "Resulting value: " << result.remainder + result.modulus << endl;
-
+    cout << "Resulting value: " << polynomial.coefficient - polynomial.constant << endl;
     return 0;
 }
