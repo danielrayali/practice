@@ -88,7 +88,6 @@ int main(int argc, char* argv[]) {
         getline(input, bus_id_str, ',');
         cout << "Read: " << bus_id_str << endl;
         if (bus_id_str == "x") {
-            // bus_id_str = "1";
             count++;
             continue;
         }
@@ -107,7 +106,7 @@ int main(int argc, char* argv[]) {
         cout << "  " << congruence << endl;
     }
 
-    // Iterate once to get the first polynomial to solve
+    // Iterate through the polynomials
     Polynomial polynomial(system.front());
     cout << "Starting polynomial: " << polynomial << endl;
     for (int i = 1; i < system.size(); i++) {
