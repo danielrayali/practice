@@ -34,7 +34,7 @@ public:
         ssize_t pos = value_instruction.find_first_of(']');
         int address = atoi(value_instruction.substr(4, (pos - 4)).c_str());
         cout << "Address: " << address << endl;
-        unsigned long long value = strtoull(value_instruction.substr(pos + 4).c_str(), nullptr, 0);
+        uint64_t value = strtoull(value_instruction.substr(pos + 4).c_str(), nullptr, 0);
         value &= zero_mask_;
         value |= one_mask_;
         cout << "New value: " << value << endl;
@@ -42,8 +42,8 @@ public:
 
     }
 
-    unsigned long long GetValueCount() const {
-        unsigned long long count = 0;
+    uint64_t GetValueCount() const {
+        uint64_t count = 0;
         for (auto iter : memory_) {
             count += iter.second;
         }
