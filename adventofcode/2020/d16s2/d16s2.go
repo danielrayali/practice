@@ -10,18 +10,23 @@ import (
 
 // Range contains the maximum and minimum values within a range of numbers.
 type Range struct {
-	max int
 	min int
-}
-
-func inRange(rangeStruct Range, value int) bool {
-	return (value <= rangeStruct.max) && (value >= rangeStruct.min)
+	max int
 }
 
 // TicketRange contains zero or more Ranges and a name.
 type TicketRange struct {
 	ranges []Range
 	name   string
+}
+
+func inRange(ticketRange TicketRange, value int) bool {
+	for _, currentRange := range ticketRange.ranges {
+		if value > currentRange.max || value < currentRange.min {
+			return false
+		}
+	}
+	return true
 }
 
 // Converts a string representation of a TicketRange into a TicketRange struct.
@@ -43,7 +48,7 @@ func parseTicketRangeString(ticketRangeString string) (ticketRange TicketRange) 
 			log.Fatal(maxError)
 		}
 
-		ticketRange.ranges = append(ticketRange.ranges, Range{rangeMax, rangeMin})
+		ticketRange.ranges = append(ticketRange.ranges, Range{rangeMin, rangeMax})
 	}
 	return
 }
@@ -86,14 +91,13 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 
-	// Scan() and Text() remove newlines so check for empty string
+	// Contains all ranges specified in the input
 	var allRanges []TicketRange
-	for scanner.Text() != "" {
+	for scanner.Text() != "" { // Scan() and Text() remove newlines so check for empty string
 		log.Println("Read:", scanner.Text())
 		allRanges = append(allRanges, parseTicketRangeString(scanner.Text()))
 		scanner.Scan()
 	}
-	log.Printf("Ranges: %d\n", allRanges)
 
 	scanner.Scan() // Reads "your ticket:"
 	scanner.Scan() // Reads the ticket values
@@ -110,27 +114,30 @@ func main() {
 	for i := 0; i < len(possibleRanges); i++ {
 		possibleRanges[i] = make([]TicketRange, len(allRanges))
 		if copy(possibleRanges[i], allRanges) != len(allRanges) {
-			log.Fatal("I don't understand how copy() works!")
+			log.Fatal("All ranges were not copied")
 		}
 	}
+
+	log.Println("possibleRanges:", possibleRanges)
 
 	for scanner.Scan() {
 		nearbyTicket := parseTicketString(scanner.Text())
 		for i, ticketValue := range nearbyTicket {
 			if !inAnyRange(allRanges, ticketValue) {
+				log.Println("Skipping", ticketValue)
 				continue
 			}
 
-			newRanges := make([]TicketRange, len(possibleRanges[i]))
-			copy(newRanges, possibleRanges[i])
-			for j, remainingRanges := range possibleRanges[i] {
-				for _, currentRange := range remainingRanges.ranges {
-					if !inRange(currentRange, ticketValue) {
-						newRanges = append(newRanges[:j], newRanges[j+1:]...)
-					}
+			var newRanges []TicketRange
+			for _, remainingRange := range possibleRanges[i] {
+				if inRange(remainingRange, ticketValue) {
+					newRanges = append(newRanges, remainingRange)
 				}
 			}
+
+			possibleRanges[i] = make([]TicketRange, len(newRanges))
+			copy(possibleRanges[i], newRanges)
 		}
 	}
-
+	return
 }
