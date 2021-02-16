@@ -14,6 +14,10 @@ type Range struct {
 	min int
 }
 
+func inRange(rangeStruct Range, value int) bool {
+	return (value <= rangeStruct.max) && (value >= rangeStruct.min)
+}
+
 // TicketRange contains zero or more Ranges and a name.
 type TicketRange struct {
 	ranges []Range
@@ -46,7 +50,7 @@ func parseTicketRangeString(ticketRangeString string) (ticketRange TicketRange) 
 
 // Checks whether a value is within at least one of the ranges.
 // It returns true if it is at least in one range, false otherwise.
-func inRange(ranges []TicketRange, value int) bool {
+func inAnyRange(ranges []TicketRange, value int) bool {
 	for _, ticketRangeValue := range ranges {
 		for _, rangeValue := range ticketRangeValue.ranges {
 			if value >= rangeValue.min && value <= rangeValue.max {
@@ -112,7 +116,21 @@ func main() {
 
 	for scanner.Scan() {
 		nearbyTicket := parseTicketString(scanner.Text())
+		for i, ticketValue := range nearbyTicket {
+			if !inAnyRange(allRanges, ticketValue) {
+				continue
+			}
 
+			newRanges := make([]TicketRange, len(possibleRanges[i]))
+			copy(newRanges, possibleRanges[i])
+			for j, remainingRanges := range possibleRanges[i] {
+				for _, currentRange := range remainingRanges.ranges {
+					if !inRange(currentRange, ticketValue) {
+						newRanges = append(newRanges[:j], newRanges[j+1:]...)
+					}
+				}
+			}
+		}
 	}
 
 }
