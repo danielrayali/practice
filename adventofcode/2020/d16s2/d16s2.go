@@ -57,26 +57,10 @@ func inRange(ranges []TicketRange, value int) bool {
 	return false
 }
 
-// Returns a list of values that are not atleast within one of the ranges.
-// ticketString is expected to be 3 comma separated values e.g. "1,2,3".
-// Each value of ticketString is processed individually
-func getOutOfRange(ranges [][]int, ticketString string) []int {
-	var ticketValues = strings.Split(ticketString, ",")
-	var outOfRange []int
-	for i := 0; i < len(ticketValues); i++ {
-		value, err := strconv.Atoi(ticketValues[i])
-		if err != nil {
-			log.Fatal(err)
-		}
-		if !inRange(ranges, value) {
-			log.Println("Out of range value found:", value)
-			outOfRange = append(outOfRange, value)
-		}
-	}
-	return outOfRange
-}
-
-func convertTicketString(ticketString string) (ticket []int) {
+// Parses a string representation of a ticket and returns a slice of ints.
+// A ticketString is expected to be comma separated list of integers with no spaces.
+// String to integer conversion errors cause a fatal log message.
+func parseTicketString(ticketString string) (ticket []int) {
 	valueStrings := strings.Split(ticketString, ",")
 	for i := 0; i < len(valueStrings); i++ {
 		value, err := strconv.Atoi(valueStrings[i])
@@ -95,30 +79,14 @@ func main() {
 	}
 	defer file.Close()
 
-	// Read fields
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
-	var allRanges [][]int
 
-	// Scan() and Text() remove newlines (all spaces?), check for empty string
+	// Scan() and Text() remove newlines so check for empty string
+	var allRanges []TicketRange
 	for scanner.Text() != "" {
 		log.Println("Read:", scanner.Text())
-		halves := strings.Split(scanner.Text(), ": ")
-		ranges := strings.Split(halves[1], " or ")
-		for i := 0; i < len(ranges); i++ {
-			var maxAndMin = strings.Split(ranges[i], "-")
-			var rangeMin, minError = strconv.Atoi(maxAndMin[0])
-			if minError != nil {
-				log.Fatal(minError)
-			}
-
-			var rangeMax, maxError = strconv.Atoi(maxAndMin[1])
-			if maxError != nil {
-				log.Fatal(maxError)
-			}
-
-			allRanges := append(allRanges, []int{rangeMin, rangeMax})
-		}
+		allRanges = append(allRanges, parseTicketRangeString(scanner.Text()))
 		scanner.Scan()
 	}
 	log.Printf("Ranges: %d\n", allRanges)
@@ -126,18 +94,24 @@ func main() {
 	scanner.Scan() // Reads "your ticket:"
 	scanner.Scan() // Reads the ticket values
 
-	yourTicket := convertTicketString(scanner.Text())
+	yourTicket := parseTicketString(scanner.Text())
 	log.Print("Your ticket:", yourTicket)
 
 	scanner.Scan() // Reads newline
 	scanner.Scan() // Reads "nearby tickets:"
 
-	// Reads all tickets and save out of range values
-	for scanner.Scan() {
-		outOfRange := getOutOfRange(allRanges, scanner.Text())
-		if outOfRange != nil {
-			continue
+	// Setup possible ranges for each column of the ticket entry.
+	// This assumes all tickets contain the same number of values.
+	possibleRanges := make([][]TicketRange, len(yourTicket))
+	for i := 0; i < len(possibleRanges); i++ {
+		possibleRanges[i] = make([]TicketRange, len(allRanges))
+		if copy(possibleRanges[i], allRanges) != len(allRanges) {
+			log.Fatal("I don't understand how copy() works!")
 		}
+	}
+
+	for scanner.Scan() {
+		nearbyTicket := parseTicketString(scanner.Text())
 
 	}
 
