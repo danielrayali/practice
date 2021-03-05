@@ -8,32 +8,44 @@ import (
 	"strings"
 )
 
-// Range contains the maximum and minimum values within a range of numbers.
+// Range unexported
 type Range struct {
 	min int
 	max int
 }
 
-// TicketRange contains zero or more Ranges and a name.
-type TicketRange struct {
+// Field unexported
+type Field struct {
 	ranges []Range
 	name   string
 }
 
-func inRange(ticketRange TicketRange, value int) bool {
-	for _, currentRange := range ticketRange.ranges {
-		if value > currentRange.max || value < currentRange.min {
-			return false
-		}
-	}
-	return true
+// PossibleFields unexported
+type PossibleFields struct {
+	fields []Field
 }
 
-// Converts a string representation of a TicketRange into a TicketRange struct.
-// Errors in converting ascii to int cause a fatal log statement.
-func parseTicketRangeString(ticketRangeString string) (ticketRange TicketRange) {
-	halves := strings.Split(ticketRangeString, ": ")
-	ticketRange.name = halves[0]
+// AllPossibleFields unexported
+type AllPossibleFields struct {
+	possibleFields []PossibleFields
+}
+
+func inAtLeastOneRange(field Field, value int) bool {
+	for _, currentRange := range field.ranges {
+		if value <= currentRange.max && value >= currentRange.min {
+			return true
+		}
+	}
+	return false
+}
+
+// func remove(slice []FieldRanges, index int) []FieldRanges {
+// 	return append(slice[:index], slice[index+1:]...)
+// }
+
+func parseFieldString(fieldString string) (field Field) {
+	halves := strings.Split(fieldString, ": ")
+	field.name = halves[0]
 
 	ranges := strings.Split(halves[1], " or ")
 	for i := 0; i < len(ranges); i++ {
@@ -48,16 +60,16 @@ func parseTicketRangeString(ticketRangeString string) (ticketRange TicketRange) 
 			log.Fatal(maxError)
 		}
 
-		ticketRange.ranges = append(ticketRange.ranges, Range{rangeMin, rangeMax})
+		field.ranges = append(field.ranges, Range{rangeMin, rangeMax})
 	}
 	return
 }
 
 // Checks whether a value is within at least one of the ranges.
 // It returns true if it is at least in one range, false otherwise.
-func inAnyRange(ranges []TicketRange, value int) bool {
-	for _, ticketRangeValue := range ranges {
-		for _, rangeValue := range ticketRangeValue.ranges {
+func inAnyRange(fields []Field, value int) bool {
+	for _, field := range fields {
+		for _, rangeValue := range field.ranges {
 			if value >= rangeValue.min && value <= rangeValue.max {
 				return true
 			}
@@ -92,10 +104,10 @@ func main() {
 	scanner.Scan()
 
 	// Contains all ranges specified in the input
-	var allRanges []TicketRange
+	var possibleFields PossibleFields
 	for scanner.Text() != "" { // Scan() and Text() remove newlines so check for empty string
 		log.Println("Read:", scanner.Text())
-		allRanges = append(allRanges, parseTicketRangeString(scanner.Text()))
+		possibleFields.fields = append(possibleFields.fields, parseFieldString(scanner.Text()))
 		scanner.Scan()
 	}
 
@@ -110,34 +122,56 @@ func main() {
 
 	// Setup possible ranges for each column of the ticket entry.
 	// This assumes all tickets contain the same number of values.
-	possibleRanges := make([][]TicketRange, len(yourTicket))
-	for i := 0; i < len(possibleRanges); i++ {
-		possibleRanges[i] = make([]TicketRange, len(allRanges))
-		if copy(possibleRanges[i], allRanges) != len(allRanges) {
-			log.Fatal("All ranges were not copied")
-		}
+	var allPossibleFields AllPossibleFields
+	for i := 0; i < len(possibleFields.fields); i++ {
+		allPossibleFields.possibleFields = append(allPossibleFields.possibleFields, possibleFields)
 	}
+	log.Println("Possible field ranges", allPossibleFields)
 
-	log.Println("possibleRanges:", possibleRanges)
-
+	count := 0
 	for scanner.Scan() {
 		nearbyTicket := parseTicketString(scanner.Text())
 		for i, ticketValue := range nearbyTicket {
-			if !inAnyRange(allRanges, ticketValue) {
-				log.Println("Skipping", ticketValue)
+			if !inAnyRange(possibleFields.fields, ticketValue) {
+				count += ticketValue
 				continue
 			}
 
-			var newRanges []TicketRange
-			for _, remainingRange := range possibleRanges[i] {
-				if inRange(remainingRange, ticketValue) {
-					newRanges = append(newRanges, remainingRange)
+			for j, possibleField := range allPossibleFields.possibleFields {
+				for k, possibleRange := range possibleField.fields {
+					if !inAtLeastOneRange(possibleRange, ticketValue) {
+						possibleFields.fields = append(possibleFields.fields[:k], possibleFields.fields[k+1:]...)
+						if len(possibleFields.fields) == 1 {
+							for l, otherPossibleField := range allPossibleFields.possibleFields {
+								if l == j {
+									continue
+								}
+								allPossibleFields.possibleFields[l].fields[]
+							}
+						}
+					}
+
 				}
 			}
 
-			possibleRanges[i] = make([]TicketRange, len(newRanges))
-			copy(possibleRanges[i], newRanges)
+			for j := 0; j < len(allPossibleFields.possibleFields[j].fields); j++ {
+				if !inAtLeastOneRange(allPossibleFields.possibleFields[i].fields[j], ticketValue) {
+					log.Println("Removing", possibleFieldRanges[i][j], "because", ticketValue, "is out of range")
+					newPossibleFieldRanges = remove(possibleFieldRanges[i], j)
+					if len(newPossibleFieldRanges) == 1 {
+						for k := 0; k < len(possibleFieldRanges); k++ {
+							log.Println("Removing", possibleFieldRanges[i][j].name, "from all other possibles")
+							if k == i {
+								continue
+							}
+							possibleFieldRanges[k] = remove(possibleFieldRanges[k], k)
+						}
+					}
+				}
+			}
 		}
 	}
+	log.Println("Possible ranges:", possibleFieldRanges)
+	log.Println("Scanning error rate:", count)
 	return
 }
